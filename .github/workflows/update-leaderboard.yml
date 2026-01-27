@@ -1,0 +1,67 @@
+name: Update Leaderboard
+
+on:
+  repository_dispatch:
+    types: [update-leaderboard]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          # We need to use a PAT here to be able to push back to the repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Update leaderboard data
+        id: update_script
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = './leaderboard/db.json';
+
+            // 1. Read the existing data
+            let db;
+            try {
+              const fileContent = fs.readFileSync(path, 'utf8');
+              db = JSON.parse(fileContent);
+            } catch (e) {
+              console.log('File not found or invalid JSON, starting new db.');
+              db = { scores: [] };
+            }
+
+            // 2. Get the new score from the event payload
+            const newScore = {
+              name: context.payload.client_payload.name,
+              points: context.payload.client_payload.points,
+              timestamp: new Date().toISOString()
+            };
+            
+            if (!newScore.name || typeof newScore.points !== 'number') {
+              core.setFailed('Invalid score data from payload.');
+              return;
+            }
+
+            // 3. Add new score and sort
+            db.scores.push(newScore);
+            db.scores.sort((a, b) => b.points - a.points);
+            
+            // Keep only top 100
+            db.scores = db.scores.slice(0, 100);
+
+            // 4. Write the new data back to the file
+            fs.writeFileSync(path, JSON.stringify(db, null, 2));
+            
+            console.log('Successfully updated leaderboard with score:', newScore);
+            
+      - name: Commit and push if changed
+        run: |
+          git add ./leaderboard/db.json
+          git diff --staged --quiet || (git commit -m "Update leaderboard data" && git push)

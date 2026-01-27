@@ -3,16 +3,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchLeaderboard() {
-    // In a real deployment, you would use the actual server URL
-    const API_URL = '/leaderboard'; // Assuming the server is serving this file
+    const API_URL = 'https://raw.githubusercontent.com/tonakapi/isshin-clicker-leaderboard/main/leaderboard/db.json';
 
     try {
-        const response = await fetch(API_URL);
+        // Add a cache-busting parameter to the URL
+        const response = await fetch(`${API_URL}?t=${new Date().getTime()}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const leaderboardData = await response.json();
-        renderLeaderboard(leaderboardData);
+        const db = await response.json();
+        renderLeaderboard(db.scores);
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
         const leaderboardBody = document.getElementById('leaderboard-body');
@@ -24,7 +24,7 @@ function renderLeaderboard(data) {
     const leaderboardBody = document.getElementById('leaderboard-body');
     leaderboardBody.innerHTML = ''; // Clear existing data
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         leaderboardBody.innerHTML = '<tr><td colspan="3">まだランキングデータがありません。</td></tr>';
         return;
     }
