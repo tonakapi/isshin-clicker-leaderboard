@@ -9,6 +9,17 @@
 <body>
     <div id="leaderboard-container">
         <h1>転生ポイントランキング</h1>
+
+        <div id="submission-form">
+            <h2>スコアを登録</h2>
+            <form onsubmit="submitScore(event)">
+                <input type="text" id="name" placeholder="名前" required>
+                <input type="number" id="points" placeholder="ポイント" required>
+                <button type="submit">登録</button>
+            </form>
+            <p id="submission-status"></p>
+        </div>
+
         <table id="leaderboard-table">
             <thead>
                 <tr>
