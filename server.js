@@ -50,16 +50,29 @@ app.post('/scores', (req, res) => {
     }
 
     const db = readDB();
-    const newScore = {
-        name,
-        points,
-        timestamp: new Date().toISOString()
-    };
+    const existingScoreIndex = db.scores.findIndex(score => score.name === name);
 
-    db.scores.push(newScore);
-    writeDB(db);
-
-    res.status(201).json({ message: 'Score submitted successfully.', score: newScore });
+    if (existingScoreIndex !== -1) {
+        // User exists, update score only if it's higher
+        if (points > db.scores[existingScoreIndex].points) {
+            db.scores[existingScoreIndex].points = points;
+            db.scores[existingScoreIndex].timestamp = new Date().toISOString();
+            writeDB(db);
+            res.status(200).json({ message: 'Score updated successfully.', score: db.scores[existingScoreIndex] });
+        } else {
+            res.status(200).json({ message: 'Score not updated, as it is not higher than the existing score.' });
+        }
+    } else {
+        // New user, add new score
+        const newScore = {
+            name,
+            points,
+            timestamp: new Date().toISOString()
+        };
+        db.scores.push(newScore);
+        writeDB(db);
+        res.status(201).json({ message: 'Score submitted successfully.', score: newScore });
+    }
 });
 
 app.listen(port, () => {
