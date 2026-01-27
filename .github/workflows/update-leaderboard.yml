@@ -26,6 +26,9 @@ jobs:
           script: |
             const fs = require('fs');
             const path = './leaderboard/db.json';
+            
+            // Ensure the directory exists
+            fs.mkdirSync('leaderboard', { recursive: true });
 
             // 1. Read the existing data
             let db;
