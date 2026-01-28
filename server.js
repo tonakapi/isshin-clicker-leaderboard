@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 // Helper function to read the database
+// Triggering a redeploy
 function readDB() {
     try {
         const data = fs.readFileSync(DB_PATH, 'utf8');
